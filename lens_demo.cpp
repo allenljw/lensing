@@ -24,6 +24,9 @@ const float XL2 =  WL;
 const float YL1 = -WL;
 const float YL2 =  WL;
 
+// use a struct to pass the const
+
+
 // Used to time code. OK for single threaded programs but not for
 // multithreaded programs. See other demos for hints at timing CUDA
 // code.
@@ -32,6 +35,39 @@ double diffclock(clock_t clock1,clock_t clock2)
   double diffticks = clock1 - clock2;
   double diffms = (diffticks * 1000) / CLOCKS_PER_SEC;
   return diffms; // Time difference in milliseconds
+}
+
+__global__ void mx_shoot(float* xlens, float* ylens, float* eps, float XL1, float YL1, int nlenses) 
+{
+    // Source star parameters. You can adjust these if you like - it is
+    // interesting to look at the different lens images that result
+    const float rsrc = 0.1;      // radius
+    const float ldc = 0.5;      // limb darkening coefficient
+    const float xsrc = 0.0;      // x and y centre on the map
+    const float ysrc = 0.0;
+    const float rsrc2 = rsrc * rsrc;
+
+    float xl, yl, xs, ys, sep2, mu;
+    float xd, yd;
+
+    int col = blockDim.x * blockIdx.x + threadIdx.x;
+    int row = blockDim.y * blockIdx.y + threadIdx.y;
+
+
+    yl = YL1 + row * lens_scale;
+    xl = XL1 + col * lens_scale;
+
+    shoot(xs, ys, xl, yl, xlens, ylens, eps, nlenses);
+
+    xd = xs - xsrc;
+    yd = ys - ysrc;
+    sep2 = xd * xd + yd * yd;
+    if (sep2 < rsrc2) {
+        mu = sqrt(1 - sep2 / rsrc2);
+        lensim(row, col) = 1.0 - ldc * (1 - mu);
+    }
+
+
 }
 
 int main(int argc, char* argv[]) 
@@ -45,12 +81,7 @@ int main(int argc, char* argv[])
   const int nlenses = set_example_3(&xlens, &ylens, &eps);
   std::cout << "# Simulating " << nlenses << " lens system" << std::endl;
 
-  // Source star parameters. You can adjust these if you like - it is
-  // interesting to look at the different lens images that result
-  const float rsrc = 0.1;      // radius
-  const float ldc  = 0.5;      // limb darkening coefficient
-  const float xsrc = 0.0;      // x and y centre on the map
-  const float ysrc = 0.0;
+
 
   // Pixel size in physical units of the lens image. You can try finer
   // lens scale which will result in larger images (and take more
@@ -67,10 +98,27 @@ int main(int argc, char* argv[])
 
   clock_t tstart = clock();
 
+  //declare the variables for device function here
+  // copy the host variables to device variables
+  float* d_xlens, d_ylens, d_eps;
+  size_t size = nlenses * sizeof(float);
+  cudaMalloc(&d_xlens, size);
+  cudaMalloc(&d_ylens, size);
+  cudaMalloc(&d_eps, size);
+
+  cudaMemcpy(d_xlens, xlens, size, cudaMemcpyHostToDevice);
+  cudaMemcpy(d_ylens, ylens, size, cudaMemcpyHostToDevice);
+  cudaMemcpy(d_eps, eps, size, cudaMemcpyHostToDevice);
+
+  //use the device function here
+  mx_shoot<<<npixy, npixx>>>(d_xlens, d_ylens, d_eps, XL1, YL1, nlenses)
+
+
   // Draw the lensing image map here. For each pixel, shoot a ray back
   // to the source plane, then test whether or or not it hits the
   // source star
-  const float rsrc2 = rsrc * rsrc;
+  // replace with device function
+  /*const float rsrc2 = rsrc * rsrc;
   float xl, yl, xs, ys, sep2, mu;
   float xd, yd;
   int numuse = 0;
@@ -89,7 +137,7 @@ int main(int argc, char* argv[])
       mu = sqrt(1 - sep2 / rsrc2);
       lensim(iy, ix) = 1.0 - ldc * (1 - mu);
     }
-  }
+  }*/
 
   clock_t tend = clock();
   double tms = diffclock(tend, tstart);
