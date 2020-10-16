@@ -75,6 +75,8 @@ __global__ void mx_shoot(float* xlens, float* ylens, float* eps, float* d_lensim
     int iy = blockIdx.x;
     int ix = threadIdx.x;
 
+    printf("device seq number n: %d\n", n);
+
     yl = YL1 + iy * lens_scale;
     xl = XL1 + ix * lens_scale;
 
@@ -114,7 +116,6 @@ int main(int argc, char* argv[])
 
   // Put the lens image in this array
   Array<float, 2> lensim(npixy, npixx);
-  //float lensim[npixy][npixx];
 
   clock_t tstart = clock();
 
@@ -166,7 +167,7 @@ int main(int argc, char* argv[])
 
   for (int iy = 0; iy < npixy; ++iy) 
   for (int ix = 0; ix < npixx; ++ix) { 
-    lensim(iy, ix) = h_lensim[iy * npixy + npixx];
+    lensim(iy, ix) = h_lensim[iy * npixy + ix];
   }
 
   clock_t tend = clock();
