@@ -17,8 +17,6 @@
 
 
 // Global variables! Not nice style, but we'll get away with it here.
-#define BLOCKSIZE_x 32
-#define BLOCKSIZE_y 32
 
 // Boundaries in physical units on the lens plane
 const float WL  = 2.0;
@@ -58,31 +56,38 @@ double diffclock(clock_t clock1,clock_t clock2)
   return diffms; // Time difference in milliseconds
 }
 
-__global__ void mx_shoot(float* xlens, float* ylens, float* eps, float* d_lensim, float XL1, float YL1, int nlenses, float lens_scale, float rsrc, float ldc, float xsrc, float ysrc) 
+__global__ void mx_shoot(float* xlens, float* ylens, float* eps, float* d_lensim, float XL1, float YL1, int nlenses, float lens_scale, int cols, int rows) 
 {
+    // Source star parameters. You can adjust these if you like - it is
+    // interesting to look at the different lens images that result
+    const float rsrc = 0.1;      // radius
+    const float ldc = 0.5;      // limb darkening coefficient
+    const float xsrc = 0.0;      // x and y centre on the map
+    const float ysrc = 0.0;
     float rsrc2 = rsrc * rsrc;
 
     float xl, yl, xs, ys, sep2, mu;
     float xd, yd;
 
     int n = blockDim.x * blockIdx.x + threadIdx.x;
-    int iy = blockIdx.x;
-    int ix = threadIdx.x;
 
-    //printf("device seq number n: %d\n", n);
+    if (n < (cols * rows)) {
+      int iy = floor(n / cols);
+      int ix = n % cols;
 
-    yl = YL1 + iy * lens_scale;
-    xl = XL1 + ix * lens_scale;
+      yl = YL1 + iy * lens_scale;
+      xl = XL1 + ix * lens_scale;
 
-    shoot(xs, ys, xl, yl, xlens, ylens, eps, nlenses);
-    
-    xd = xs - xsrc;
-    yd = ys - ysrc;
-    sep2 = xd * xd + yd * yd;
-    if (sep2 < rsrc2) {
-        mu = sqrt(1 - sep2 / rsrc2);
-        //lensim(row, col) = 1.0 - ldc * (1 - mu);
-        d_lensim[n] = 1.0 - ldc * (1 - mu);
+      shoot(xs, ys, xl, yl, xlens, ylens, eps, nlenses);
+      
+      xd = xs - xsrc;
+      yd = ys - ysrc;
+      sep2 = xd * xd + yd * yd;
+      if (sep2 < rsrc2) {
+          mu = sqrt(1 - sep2 / rsrc2);
+          //lensim(row, col) = 1.0 - ldc * (1 - mu);
+          d_lensim[n] = 1.0 - ldc * (1 - mu);
+      }
     }
 
 }
@@ -111,35 +116,36 @@ int main(int argc, char* argv[])
   // Put the lens image in this array
   Array<float, 2> lensim(npixy, npixx);
 
-  clock_t tstart = clock();
-
-  // Source star parameters. You can adjust these if you like - it is
-  // interesting to look at the different lens images that result
-  const float rsrc = 0.1;      // radius
-  const float ldc = 0.5;      // limb darkening coefficient
-  const float xsrc = 0.0;      // x and y centre on the map
-  const float ysrc = 0.0;
-
   //declare the variables for device function here
   // copy the host variables to device variables
   float *d_xlens, *d_ylens, *d_eps, *d_lensim;
   size_t size = nlenses * sizeof(float);
   size_t size_img = npixx * npixy * sizeof(float);
   size_t pitch;
-  float* h_lensim = (float*)malloc(size_img);
+  //float* h_lensim = (float*)malloc(size_img);
 
   cudaMalloc(&d_xlens, size);
   cudaMalloc(&d_ylens, size);
   cudaMalloc(&d_eps, size);
-  cudaMalloc(&d_lensim, size_img);
+  //cudaMalloc(&d_lensim, size_img);
 
   cudaMemcpy(d_xlens, xlens, size, cudaMemcpyHostToDevice);
   cudaMemcpy(d_ylens, ylens, size, cudaMemcpyHostToDevice);
   cudaMemcpy(d_eps, eps, size, cudaMemcpyHostToDevice);
 
-  mx_shoot<<<npixy, npixx>>>(d_xlens, d_ylens, d_eps, d_lensim, XL1, YL1, nlenses, lens_scale, rsrc, ldc, xsrc, ysrc);
+  int total = npixx * npixy;
+  int threadsPerBlock = 512;
+  int blocksPerGrid = (total + threadsPerBlock - 1) / threadsPerBlock;
 
-  cudaMemcpy(h_lensim, d_lensim, size_img, cudaMemcpyDeviceToHost);
+  clock_t tstart = clock();
+
+  mx_shoot<<<blocksPerGrid, threadsPerBlock>>>(d_xlens, d_ylens, d_eps, d_lensim, XL1, YL1, nlenses, lens_scale, npixx, npixy);
+
+  clock_t tend = clock();
+  double tms = diffclock(tend, tstart);
+  std::cout << "# Time elapsed: " << tms << " ms " << std::endl;
+
+  cudaMemcpy(lensim.buffer, d_lensim, size_img, cudaMemcpyDeviceToHost);
 
   // Draw the lensing image map here. For each pixel, shoot a ray back
   // to the source plane, then test whether or or not it hits the
@@ -166,14 +172,10 @@ int main(int argc, char* argv[])
     }
   }*/
 
-  for (int iy = 0; iy < npixy; ++iy) 
-  for (int ix = 0; ix < npixx; ++ix) { 
-    lensim(iy, ix) = h_lensim[iy * npixy + ix];
-  }
-
-  clock_t tend = clock();
-  double tms = diffclock(tend, tstart);
-  std::cout << "# Time elapsed: " << tms << " ms " << std::endl;
+  // for (int iy = 0; iy < npixy; ++iy) 
+  // for (int ix = 0; ix < npixx; ++ix) { 
+  //   lensim(iy, ix) = h_lensim[iy * npixy + ix];
+  // }
 
   // Write the lens image to a FITS formatted file. You can view this
   // image file using ds9
@@ -183,8 +185,10 @@ int main(int argc, char* argv[])
   delete[] ylens;
   delete[] eps;
 
-  // cudaFree( d_xlens );
-  // cudaFree( d_ylens );
-  // cudaFree( d_eps );
+  cudaFree( d_xlens );
+  cudaFree( d_ylens );
+  cudaFree( d_eps );
+  cudaFree( d_lensim );
+  
 }
 
