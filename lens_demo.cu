@@ -24,7 +24,25 @@ const float XL2 =  WL;
 const float YL1 = -WL;
 const float YL2 =  WL;
 
-// use a struct to pass the const
+
+// Implement lens equation, given the lens position (xl, yl) and the
+// lens system configuration, shoot a ray back to the source position
+// (xs, ys)
+__device__ void shoot(float& xs, float& ys, float xl, float yl, 
+  float* xlens, float* ylens, float* eps, int nlenses)
+{
+  float dx, dy, dr;
+  xs = xl;
+  ys = yl;
+  for (int p = 0; p < nlenses; ++p) {
+    dx = xl - xlens[p];
+    dy = yl - ylens[p];
+    dr = dx * dx + dy * dy;
+    xs -= eps[p] * dx / dr;
+    ys -= eps[p] * dy / dr;
+  }
+
+}
 
 
 // Used to time code. OK for single threaded programs but not for
@@ -37,7 +55,7 @@ double diffclock(clock_t clock1,clock_t clock2)
   return diffms; // Time difference in milliseconds
 }
 
-__global__ void mx_shoot(float* xlens, float* ylens, float* eps, float XL1, float YL1, int nlenses) 
+__global__ void mx_shoot(float* xlens, float* ylens, float* eps, float* d_lensim, float XL1, float YL1, int nlenses, float lens_scale) 
 {
     // Source star parameters. You can adjust these if you like - it is
     // interesting to look at the different lens images that result
@@ -59,14 +77,14 @@ __global__ void mx_shoot(float* xlens, float* ylens, float* eps, float XL1, floa
 
     shoot(xs, ys, xl, yl, xlens, ylens, eps, nlenses);
 
-    xd = xs - xsrc;
-    yd = ys - ysrc;
-    sep2 = xd * xd + yd * yd;
-    if (sep2 < rsrc2) {
-        mu = sqrt(1 - sep2 / rsrc2);
-        lensim(row, col) = 1.0 - ldc * (1 - mu);
-    }
-
+    cout << "device col:" << col << ", row:" << row << endl;
+    // xd = xs - xsrc;
+    // yd = ys - ysrc;
+    // sep2 = xd * xd + yd * yd;
+    // if (sep2 < rsrc2) {
+    //     mu = sqrt(1 - sep2 / rsrc2);
+    //     lensim(row, col) = 1.0 - ldc * (1 - mu);
+    // }
 
 }
 
@@ -100,8 +118,10 @@ int main(int argc, char* argv[])
 
   //declare the variables for device function here
   // copy the host variables to device variables
-  float* d_xlens, d_ylens, d_eps;
+  float* d_xlens, d_ylens, d_eps, d_lensim;
   size_t size = nlenses * sizeof(float);
+  size_t pitch;
+
   cudaMalloc(&d_xlens, size);
   cudaMalloc(&d_ylens, size);
   cudaMalloc(&d_eps, size);
@@ -110,8 +130,11 @@ int main(int argc, char* argv[])
   cudaMemcpy(d_ylens, ylens, size, cudaMemcpyHostToDevice);
   cudaMemcpy(d_eps, eps, size, cudaMemcpyHostToDevice);
 
+  cudaMallocPitch(&d_lensim, &pitch, npixx * sizeof(float), npixy);
+  cudaMemcpy2D(d_lensim, pitch, lensim, npixx*sizeof(float), npixx*sizeof(float), npixy, cudaMemcpyHostToDevice);
+
   //use the device function here
-  mx_shoot<<<npixy, npixx>>>(d_xlens, d_ylens, d_eps, XL1, YL1, nlenses)
+  mx_shoot<<<npixy, npixx>>>(d_xlens, d_ylens, d_eps, XL1, YL1, nlenses, lens_scale)
 
 
   // Draw the lensing image map here. For each pixel, shoot a ray back
