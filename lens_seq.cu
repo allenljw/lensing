@@ -42,7 +42,7 @@ int main(int argc, char* argv[])
   float* xlens;
   float* ylens;
   float* eps;
-  const int nlenses = set_example_1(&xlens, &ylens, &eps);
+  const int nlenses = set_example_3(&xlens, &ylens, &eps);
   std::cout << "# Simulating " << nlenses << " lens system" << std::endl;
 
   // Source star parameters. You can adjust these if you like - it is
@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
     yl = YL1 + iy * lens_scale;
     xl = XL1 + ix * lens_scale;
 
-    shoot(xs, ys, xl, yl, xlens, ylens, eps, nlenses);
+    shoot2(xs, ys, xl, yl, xlens, ylens, eps, nlenses);
 
     xd = xs - xsrc;
     yd = ys - ysrc;
@@ -89,7 +89,7 @@ int main(int argc, char* argv[])
       mu = sqrt(1 - sep2 / rsrc2);
       lensim(iy, ix) = 1.0 - ldc * (1 - mu);
     }
-    
+
   }
 
   clock_t tend = clock();

@@ -4,7 +4,7 @@
 // Implement lens equation, given the lens position (xl, yl) and the
 // lens system configuration, shoot a ray back to the source position
 // (xs, ys)
-void shoot(float& xs, float& ys, float xl, float yl, 
+void shoot2(float& xs, float& ys, float xl, float yl, 
 	   float* xlens, float* ylens, float* eps, int nlenses);
 
 // Set up a single lens example
