@@ -8,12 +8,14 @@
 
 #include <iostream>
 #include <string>
-
+#include <stdio.h>
 #include <cmath>
 #include <cuda.h>
 
 #include "lenses.h"
 #include "arrayff.hxx"
+
+using namespace std;
 
 // Global variables! Not nice style, but we'll get away with it here.
 #define BLOCKSIZE_x 32
