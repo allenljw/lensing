@@ -3,7 +3,24 @@
 
 #include "lenses.h"
 
+// Implement lens equation, given the lens position (xl, yl) and the
+// lens system configuration, shoot a ray back to the source position
+// (xs, ys)
+// void shoot(float& xs, float& ys, float xl, float yl, 
+// 	   float* xlens, float* ylens, float* eps, int nlenses)
+// {
+//   float dx, dy, dr;
+//   xs = xl;
+//   ys = yl;
+//   for (int p = 0; p < nlenses; ++p) {
+//     dx = xl - xlens[p];
+//     dy = yl - ylens[p];
+//     dr = dx * dx + dy * dy;
+//     xs -= eps[p] * dx / dr;
+//     ys -= eps[p] * dy / dr;
+//   }
 
+// }
 
 // Set up a single lens example
 int set_example_1(float** xlens, float** ylens, float** eps)
