@@ -130,7 +130,7 @@ int main(int argc, char* argv[])
 
   cudaMalloc((void**)&d_xlens, size);
   cudaMalloc((void**)&d_ylens, size);
-  cudaMalloc((void **)&d_eps, size);
+  cudaMalloc((void**)&d_eps, size);
 
   cudaMemcpy(d_xlens, xlens, size, cudaMemcpyHostToDevice);
   cudaMemcpy(d_ylens, ylens, size, cudaMemcpyHostToDevice);
