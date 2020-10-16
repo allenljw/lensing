@@ -136,14 +136,14 @@ int main(int argc, char* argv[])
   cudaMemcpy(d_ylens, ylens, size, cudaMemcpyHostToDevice);
   cudaMemcpy(d_eps, eps, size, cudaMemcpyHostToDevice);
 
-  cudaMallocPitch(&d_lensim, &pitch, npixx * sizeof(float), npixy);
-  cudaMemcpy2D(d_lensim, pitch, lensim, npixx*sizeof(float), npixx*sizeof(float), npixy, cudaMemcpyHostToDevice);
+  // cudaMallocPitch(&d_lensim, &pitch, npixx * sizeof(float), npixy);
+  // cudaMemcpy2D(d_lensim, pitch, lensim, npixx*sizeof(float), npixx*sizeof(float), npixy, cudaMemcpyHostToDevice);
 
-  //use the device function here
-  dim3 gridSize(iDivUp(npixx, BLOCKSIZE_x), iDivUp(npixy, BLOCKSIZE_y));
-  dim3 blockSize(BLOCKSIZE_y, BLOCKSIZE_x);
+  // //use the device function here
+  // dim3 gridSize(iDivUp(npixx, BLOCKSIZE_x), iDivUp(npixy, BLOCKSIZE_y));
+  // dim3 blockSize(BLOCKSIZE_y, BLOCKSIZE_x);
 
-  mx_shoot<<<gridSize, blockSize>>>(d_xlens, d_ylens, d_eps, XL1, YL1, nlenses, lens_scale);
+  // mx_shoot<<<gridSize, blockSize>>>(d_xlens, d_ylens, d_eps, d_lensim, XL1, YL1, nlenses, lens_scale);
 
 
   // Draw the lensing image map here. For each pixel, shoot a ray back
