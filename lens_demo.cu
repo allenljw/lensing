@@ -71,24 +71,23 @@ __global__ void mx_shoot(float* xlens, float* ylens, float* eps, float* d_lensim
     float xl, yl, xs, ys, sep2, mu;
     float xd, yd;
 
-    int col = blockDim.x * blockIdx.x + threadIdx.x;
-    int row = blockDim.y * blockIdx.y + threadIdx.y;
+    int n = blockDim.x * blockIdx.x + threadIdx.x;
+    int iy = blockIdx.x;
+    int ix = threadIdx.x;
 
-
-    yl = YL1 + row * lens_scale;
-    xl = XL1 + col * lens_scale;
+    yl = YL1 + iy * lens_scale;
+    xl = XL1 + ix * lens_scale;
 
     shoot(xs, ys, xl, yl, xlens, ylens, eps, nlenses);
-
-    printf("device col: %d, row: %d!\n", col, row);
-    //std::cout << "device col:" << col << ", row:" << row << std::endl;
-    // xd = xs - xsrc;
-    // yd = ys - ysrc;
-    // sep2 = xd * xd + yd * yd;
-    // if (sep2 < rsrc2) {
-    //     mu = sqrt(1 - sep2 / rsrc2);
-    //     lensim(row, col) = 1.0 - ldc * (1 - mu);
-    // }
+    
+    xd = xs - xsrc;
+    yd = ys - ysrc;
+    sep2 = xd * xd + yd * yd;
+    if (sep2 < rsrc2) {
+        mu = sqrt(1 - sep2 / rsrc2);
+        //lensim(row, col) = 1.0 - ldc * (1 - mu);
+        d_lensim[n] = 1.0 - ldc * (1 - mu);
+    }
 
 }
 
@@ -119,6 +118,7 @@ int main(int argc, char* argv[])
 
   // Put the lens image in this array
   Array<float, 2> lensim(npixy, npixx);
+  //float lensim[npixy][npixx];
 
   clock_t tstart = clock();
 
@@ -126,31 +126,22 @@ int main(int argc, char* argv[])
   // copy the host variables to device variables
   float *d_xlens, *d_ylens, *d_eps, *d_lensim;
   size_t size = nlenses * sizeof(float);
+  size_t size_img = npixx * npixy * sizeof(float);
   size_t pitch;
+  float* h_lensim = (float*)malloc(size_img);
 
   cudaMalloc(&d_xlens, size);
   cudaMalloc(&d_ylens, size);
   cudaMalloc(&d_eps, size);
-
-  // float *d_A, *d_B, *d_C;
-  // cudaMalloc(&d_A, size);
-  // cudaMalloc(&d_B, size);
-  // cudaMalloc(&d_C, size);
-
+  cudaMalloc(&d_lensim, size_img);
 
   cudaMemcpy(d_xlens, xlens, size, cudaMemcpyHostToDevice);
   cudaMemcpy(d_ylens, ylens, size, cudaMemcpyHostToDevice);
   cudaMemcpy(d_eps, eps, size, cudaMemcpyHostToDevice);
 
-  cudaMallocPitch(&d_lensim, &pitch, npixx * sizeof(float), npixy);
-  cudaMemcpy2D(d_lensim, pitch, lensim, npixx*sizeof(float), npixx*sizeof(float), npixy, cudaMemcpyHostToDevice);
+  mx_shoot<<<npixy, npixx>>>(d_xlens, d_ylens, d_eps, d_lensim, XL1, YL1, nlenses, lens_scale);
 
-  // //use the device function here
-  // dim3 gridSize(iDivUp(npixx, BLOCKSIZE_x), iDivUp(npixy, BLOCKSIZE_y));
-  // dim3 blockSize(BLOCKSIZE_y, BLOCKSIZE_x);
-
-  // mx_shoot<<<gridSize, blockSize>>>(d_xlens, d_ylens, d_eps, d_lensim, XL1, YL1, nlenses, lens_scale);
-
+  cudaMemcpy(h_lensim, d_lensim, size_img, cudaMemcpyDeviceToHost);
 
   // Draw the lensing image map here. For each pixel, shoot a ray back
   // to the source plane, then test whether or or not it hits the
@@ -176,6 +167,11 @@ int main(int argc, char* argv[])
       lensim(iy, ix) = 1.0 - ldc * (1 - mu);
     }
   }*/
+
+  for (int iy = 0; iy < npixy; ++iy) 
+  for (int ix = 0; ix < npixx; ++ix) { 
+    lensim(iy, ix) = h_lensim[iy * npixy + npixx];
+  }
 
   clock_t tend = clock();
   double tms = diffclock(tend, tstart);
