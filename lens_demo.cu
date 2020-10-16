@@ -140,10 +140,10 @@ int main(int argc, char* argv[])
   cudaMemcpy2D(d_lensim, pitch, lensim, npixx*sizeof(float), npixx*sizeof(float), npixy, cudaMemcpyHostToDevice);
 
   //use the device function here
-  dim3 gridSize(iDivUp(Ncols, BLOCKSIZE_x), iDivUp(Nrows, BLOCKSIZE_y));
+  dim3 gridSize(iDivUp(npixx, BLOCKSIZE_x), iDivUp(npixy, BLOCKSIZE_y));
   dim3 blockSize(BLOCKSIZE_y, BLOCKSIZE_x);
 
-  mx_shoot<<<gridSize, blockSize>>>(d_xlens, d_ylens, d_eps, XL1, YL1, nlenses, lens_scale)
+  mx_shoot<<<gridSize, blockSize>>>(d_xlens, d_ylens, d_eps, XL1, YL1, nlenses, lens_scale);
 
 
   // Draw the lensing image map here. For each pixel, shoot a ray back
@@ -173,7 +173,7 @@ int main(int argc, char* argv[])
 
   clock_t tend = clock();
   double tms = diffclock(tend, tstart);
-  std::cout << "# Time elapsed: " << tms << " ms " << numuse << std::endl;
+  std::cout << "# Time elapsed: " << tms << " ms " << std::endl;
 
   // Write the lens image to a FITS formatted file. You can view this
   // image file using ds9
