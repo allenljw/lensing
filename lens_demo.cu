@@ -128,13 +128,13 @@ int main(int argc, char* argv[])
   size_t size = nlenses * sizeof(float);
   size_t pitch;
 
-  cudaMalloc((void**)&d_xlens, size);
-  cudaMalloc((void**)&d_ylens, size);
-  cudaMalloc((void**)&d_eps, size);
+  cudaMalloc(&d_xlens, size);
+  cudaMalloc(&d_ylens, size);
+  cudaMalloc(&d_eps, size);
 
-  cudaMemcpy(d_xlens, xlens, size, cudaMemcpyHostToDevice);
-  cudaMemcpy(d_ylens, ylens, size, cudaMemcpyHostToDevice);
-  cudaMemcpy(d_eps, eps, size, cudaMemcpyHostToDevice);
+  // cudaMemcpy(d_xlens, xlens, size, cudaMemcpyHostToDevice);
+  // cudaMemcpy(d_ylens, ylens, size, cudaMemcpyHostToDevice);
+  // cudaMemcpy(d_eps, eps, size, cudaMemcpyHostToDevice);
 
   // cudaMallocPitch(&d_lensim, &pitch, npixx * sizeof(float), npixy);
   // cudaMemcpy2D(d_lensim, pitch, lensim, npixx*sizeof(float), npixx*sizeof(float), npixy, cudaMemcpyHostToDevice);
