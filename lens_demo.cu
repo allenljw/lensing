@@ -124,13 +124,19 @@ int main(int argc, char* argv[])
 
   //declare the variables for device function here
   // copy the host variables to device variables
-  float* d_xlens, d_ylens, d_eps, d_lensim;
+  //float* d_xlens, d_ylens, d_eps, d_lensim;
   size_t size = nlenses * sizeof(float);
   size_t pitch;
 
-  cudaMalloc(&d_xlens, size);
-  cudaMalloc(&d_ylens, size);
-  cudaMalloc(&d_eps, size);
+  // cudaMalloc(&d_xlens, size);
+  // cudaMalloc(&d_ylens, size);
+  // cudaMalloc(&d_eps, size);
+
+  float *d_A, *d_B, *d_C;
+  cudaMalloc(&d_A, size);
+  cudaMalloc(&d_B, size);
+  cudaMalloc(&d_C, size);
+
 
   // cudaMemcpy(d_xlens, xlens, size, cudaMemcpyHostToDevice);
   // cudaMemcpy(d_ylens, ylens, size, cudaMemcpyHostToDevice);
@@ -183,8 +189,8 @@ int main(int argc, char* argv[])
   delete[] ylens;
   delete[] eps;
 
-  cudaFree( d_xlens );
-  cudaFree( d_ylens );
-  cudaFree( d_eps );
+  // cudaFree( d_xlens );
+  // cudaFree( d_ylens );
+  // cudaFree( d_eps );
 }
 
