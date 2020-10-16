@@ -15,7 +15,6 @@
 #include "lenses.h"
 #include "arrayff.hxx"
 
-using namespace std;
 
 // Global variables! Not nice style, but we'll get away with it here.
 #define BLOCKSIZE_x 32
@@ -81,7 +80,7 @@ __global__ void mx_shoot(float* xlens, float* ylens, float* eps, float* d_lensim
 
     shoot(xs, ys, xl, yl, xlens, ylens, eps, nlenses);
 
-    cout << "device col:" << col << ", row:" << row << endl;
+    std::cout << "device col:" << col << ", row:" << row << std::endl;
     // xd = xs - xsrc;
     // yd = ys - ysrc;
     // sep2 = xd * xd + yd * yd;
