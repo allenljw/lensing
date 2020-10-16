@@ -122,12 +122,12 @@ int main(int argc, char* argv[])
   size_t size = nlenses * sizeof(float);
   size_t size_img = npixx * npixy * sizeof(float);
   size_t pitch;
-  //float* h_lensim = (float*)malloc(size_img);
+  float* h_lensim = (float*)malloc(size_img);
 
   cudaMalloc(&d_xlens, size);
   cudaMalloc(&d_ylens, size);
   cudaMalloc(&d_eps, size);
-  //cudaMalloc(&d_lensim, size_img);
+  cudaMalloc(&d_lensim, size_img);
 
   cudaMemcpy(d_xlens, xlens, size, cudaMemcpyHostToDevice);
   cudaMemcpy(d_ylens, ylens, size, cudaMemcpyHostToDevice);
@@ -145,7 +145,8 @@ int main(int argc, char* argv[])
   double tms = diffclock(tend, tstart);
   std::cout << "# Time elapsed: " << tms << " ms " << std::endl;
 
-  cudaMemcpy(lensim.buffer, d_lensim, size_img, cudaMemcpyDeviceToHost);
+  //cudaMemcpy(lensim.buffer, d_lensim, size_img, cudaMemcpyDeviceToHost);
+  cudaMemcpy(h_lensim, d_lensim, size_img, cudaMemcpyDeviceToHost);
 
   // Draw the lensing image map here. For each pixel, shoot a ray back
   // to the source plane, then test whether or or not it hits the
@@ -172,10 +173,10 @@ int main(int argc, char* argv[])
     }
   }*/
 
-  // for (int iy = 0; iy < npixy; ++iy) 
-  // for (int ix = 0; ix < npixx; ++ix) { 
-  //   lensim(iy, ix) = h_lensim[iy * npixy + ix];
-  // }
+  for (int iy = 0; iy < npixy; ++iy) 
+  for (int ix = 0; ix < npixx; ++ix) { 
+    lensim(iy, ix) = h_lensim[iy * npixy + ix];
+  }
 
   // Write the lens image to a FITS formatted file. You can view this
   // image file using ds9
