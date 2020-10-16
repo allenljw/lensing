@@ -58,15 +58,9 @@ double diffclock(clock_t clock1,clock_t clock2)
   return diffms; // Time difference in milliseconds
 }
 
-__global__ void mx_shoot(float* xlens, float* ylens, float* eps, float* d_lensim, float XL1, float YL1, int nlenses, float lens_scale) 
+__global__ void mx_shoot(float* xlens, float* ylens, float* eps, float* d_lensim, float XL1, float YL1, int nlenses, float lens_scale, float rsrc, float ldc, float xsrc, float ysrc) 
 {
-    // Source star parameters. You can adjust these if you like - it is
-    // interesting to look at the different lens images that result
-    const float rsrc = 0.1;      // radius
-    const float ldc = 0.5;      // limb darkening coefficient
-    const float xsrc = 0.0;      // x and y centre on the map
-    const float ysrc = 0.0;
-    const float rsrc2 = rsrc * rsrc;
+    float rsrc2 = rsrc * rsrc;
 
     float xl, yl, xs, ys, sep2, mu;
     float xd, yd;
@@ -75,7 +69,7 @@ __global__ void mx_shoot(float* xlens, float* ylens, float* eps, float* d_lensim
     int iy = blockIdx.x;
     int ix = threadIdx.x;
 
-    printf("device seq number n: %d\n", n);
+    //printf("device seq number n: %d\n", n);
 
     yl = YL1 + iy * lens_scale;
     xl = XL1 + ix * lens_scale;
@@ -119,6 +113,13 @@ int main(int argc, char* argv[])
 
   clock_t tstart = clock();
 
+  // Source star parameters. You can adjust these if you like - it is
+  // interesting to look at the different lens images that result
+  const float rsrc = 0.1;      // radius
+  const float ldc = 0.5;      // limb darkening coefficient
+  const float xsrc = 0.0;      // x and y centre on the map
+  const float ysrc = 0.0;
+
   //declare the variables for device function here
   // copy the host variables to device variables
   float *d_xlens, *d_ylens, *d_eps, *d_lensim;
@@ -136,7 +137,7 @@ int main(int argc, char* argv[])
   cudaMemcpy(d_ylens, ylens, size, cudaMemcpyHostToDevice);
   cudaMemcpy(d_eps, eps, size, cudaMemcpyHostToDevice);
 
-  mx_shoot<<<npixy, npixx>>>(d_xlens, d_ylens, d_eps, d_lensim, XL1, YL1, nlenses, lens_scale);
+  mx_shoot<<<npixy, npixx>>>(d_xlens, d_ylens, d_eps, d_lensim, XL1, YL1, nlenses, lens_scale, rsrc, ldc, xsrc, ysrc);
 
   cudaMemcpy(h_lensim, d_lensim, size_img, cudaMemcpyDeviceToHost);
 
