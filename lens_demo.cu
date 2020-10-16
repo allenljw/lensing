@@ -72,8 +72,8 @@ __global__ void mx_shoot(float* xlens, float* ylens, float* eps, float* d_lensim
     int n = blockDim.x * blockIdx.x + threadIdx.x;
 
     if (n < (cols * rows)) {
-      int iy = floor(n / cols);
       int ix = n % cols;
+      int iy = (n - ix) / cols;
 
       yl = YL1 + iy * lens_scale;
       xl = XL1 + ix * lens_scale;
