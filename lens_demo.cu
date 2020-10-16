@@ -16,6 +16,8 @@
 #include "arrayff.hxx"
 
 // Global variables! Not nice style, but we'll get away with it here.
+#define BLOCKSIZE_x 32
+#define BLOCKSIZE_y 32
 
 // Boundaries in physical units on the lens plane
 const float WL  = 2.0;
@@ -88,6 +90,8 @@ __global__ void mx_shoot(float* xlens, float* ylens, float* eps, float* d_lensim
 
 }
 
+int iDivUp(int hostPtr, int b){ return ((hostPtr % b) != 0) ? (hostPtr / b + 1) : (hostPtr / b); }
+
 int main(int argc, char* argv[]) 
 {
   // Set up lensing system configuration - call example_1, _2, _3 or
@@ -134,7 +138,10 @@ int main(int argc, char* argv[])
   cudaMemcpy2D(d_lensim, pitch, lensim, npixx*sizeof(float), npixx*sizeof(float), npixy, cudaMemcpyHostToDevice);
 
   //use the device function here
-  mx_shoot<<<npixy, npixx>>>(d_xlens, d_ylens, d_eps, XL1, YL1, nlenses, lens_scale)
+  dim3 gridSize(iDivUp(Ncols, BLOCKSIZE_x), iDivUp(Nrows, BLOCKSIZE_y));
+  dim3 blockSize(BLOCKSIZE_y, BLOCKSIZE_x);
+
+  mx_shoot<<<gridSize, blockSize>>>(d_xlens, d_ylens, d_eps, XL1, YL1, nlenses, lens_scale)
 
 
   // Draw the lensing image map here. For each pixel, shoot a ray back
