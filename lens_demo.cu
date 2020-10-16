@@ -74,7 +74,7 @@ __global__ void mx_shoot(float* xlens, float* ylens, float* eps, float* d_lensim
     if (n < (cols * rows)) {
       int ix = n % cols;
       //int iy = (n - ix) / cols;
-      int iy = n / rows;
+      int iy = n / cols;
 
       yl = YL1 + iy * lens_scale;
       xl = XL1 + ix * lens_scale;
@@ -107,7 +107,7 @@ int main(int argc, char* argv[])
   // Pixel size in physical units of the lens image. You can try finer
   // lens scale which will result in larger images (and take more
   // time).
-  const float lens_scale = 0.001;
+  const float lens_scale = 0.003;
 
   // Size of the lens image
   const int npixx = static_cast<int>(floor((XL2 - XL1) / lens_scale)) + 1;
