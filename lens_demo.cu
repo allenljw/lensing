@@ -91,8 +91,6 @@ __global__ void mx_shoot(float* xlens, float* ylens, float* eps, float* d_lensim
 
 }
 
-int iDivUp(int hostPtr, int b){ return ((hostPtr % b) != 0) ? (hostPtr / b + 1) : (hostPtr / b); }
-
 int main(int argc, char* argv[]) 
 {
   // Set up lensing system configuration - call example_1, _2, _3 or
@@ -103,8 +101,6 @@ int main(int argc, char* argv[])
   float* eps;
   const int nlenses = set_example_3(&xlens, &ylens, &eps);
   std::cout << "# Simulating " << nlenses << " lens system" << std::endl;
-
-
 
   // Pixel size in physical units of the lens image. You can try finer
   // lens scale which will result in larger images (and take more
