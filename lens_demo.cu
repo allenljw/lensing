@@ -123,7 +123,7 @@ int main(int argc, char* argv[])
   size_t size = nlenses * sizeof(float);
   size_t size_img = npixx * npixy * sizeof(float);
   size_t pitch;
-  float* h_lensim = (float*)malloc(size_img);
+  //float* h_lensim = (float*)malloc(size_img);
 
   cudaMalloc(&d_xlens, size);
   cudaMalloc(&d_ylens, size);
@@ -133,6 +133,7 @@ int main(int argc, char* argv[])
   cudaMemcpy(d_xlens, xlens, size, cudaMemcpyHostToDevice);
   cudaMemcpy(d_ylens, ylens, size, cudaMemcpyHostToDevice);
   cudaMemcpy(d_eps, eps, size, cudaMemcpyHostToDevice);
+  cudaMemcpy(d_lensim, lensim.buffer, size_img, cudaMemcpyHostToDevice);
 
   int total = npixx * npixy;
   int threadsPerBlock = 512;
