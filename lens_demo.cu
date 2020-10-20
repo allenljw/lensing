@@ -133,7 +133,8 @@ int main(int argc, char* argv[])
   cudaMemcpy(d_xlens, xlens, size, cudaMemcpyHostToDevice);
   cudaMemcpy(d_ylens, ylens, size, cudaMemcpyHostToDevice);
   cudaMemcpy(d_eps, eps, size, cudaMemcpyHostToDevice);
-  cudaMemcpy(d_lensim, lensim.buffer, size_img, cudaMemcpyHostToDevice);
+  //cudaMemcpy(d_lensim, lensim.buffer, size_img, cudaMemcpyHostToDevice);
+  cudaMemset(d_lensim, 0.0, size_img);
 
   int total = npixx * npixy;
   int threadsPerBlock = 512;
