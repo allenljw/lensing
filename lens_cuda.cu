@@ -104,8 +104,8 @@ int main(int argc, char* argv[])
   float* xlens;
   float* ylens;
   float* eps;
-  //const int nlenses = set_example_3(&xlens, &ylens, &eps);
-  const int nlenses = set_example_n(100, &xlens, &ylens, &eps);
+  const int nlenses = set_example_3(&xlens, &ylens, &eps);
+  //const int nlenses = set_example_n(100, &xlens, &ylens, &eps);
   std::cout << "# Simulating " << nlenses << " lens system" << std::endl;
 
   // Pixel size in physical units of the lens image. You can try finer
