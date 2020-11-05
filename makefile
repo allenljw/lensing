@@ -20,7 +20,7 @@ LIBS = -lcfitsio -lm
 
 MODS = $(INCP) $(LIBP) $(LIBS) $(OBJS) 
 
-BINS = lens_demo
+BINS = lens_cuda
 
 all : $(BINS)
 
@@ -29,7 +29,7 @@ clean :
 	rm -f *.o
 
 # Demo program. Add more programs by making entries similar to this
-lens_demo : lens_demo.cu $(OBJS)
+lens_cuda : lens_cuda.cu $(OBJS)
 	${NVCC} $(CFLAGS) -o lens_cuda lens_cuda.cu $(MODS)
 
 # Modules compiled and linked separately
