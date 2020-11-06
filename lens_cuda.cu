@@ -145,27 +145,14 @@ int main(int argc, char* argv[])
   int blocksPerGrid = (total + threadsPerBlock - 1) / threadsPerBlock;
 
   clock_t tstart = clock();
-  // float time;
-  // cudaEvent_t start, stop;
-  
-  // cudaEventCreate(&start);
-  // cudaEventCreate(&stop);
-  // cudaEventRecord(start, 0);
 
   mx_shoot<<<blocksPerGrid, threadsPerBlock>>>(d_xlens, d_ylens, d_eps, d_lensim, XL1, YL1, nlenses, lens_scale, npixx, npixy);
 
-  // cudaEventRecord(stop, 0);
-  // cudaEventSynchronize(stop);
-  // cudaEventElapsedTime(&time, start, stop);
-
-  // cudaEventDestroy(start);
-  // cudaEventDestroy(stop);
+  cudaMemcpy(lensim.buffer, d_lensim, size_img, cudaMemcpyDeviceToHost);
 
   clock_t tend = clock();
   double tms = diffclock(tend, tstart);
   std::cout << "# Time elapsed: " << tms << " ms " << std::endl;
-
-  cudaMemcpy(lensim.buffer, d_lensim, size_img, cudaMemcpyDeviceToHost);
 
   // Write the lens image to a FITS formatted file. You can view this
   // image file using ds9
