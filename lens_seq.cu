@@ -55,7 +55,7 @@ int main(int argc, char* argv[])
   // Pixel size in physical units of the lens image. You can try finer
   // lens scale which will result in larger images (and take more
   // time).
-  const float lens_scale = 0.005;
+  const float lens_scale = 0.001;
 
   // Size of the lens image
   const int npixx = static_cast<int>(floor((XL2 - XL1) / lens_scale)) + 1;
@@ -74,6 +74,9 @@ int main(int argc, char* argv[])
   float xl, yl, xs, ys, sep2, mu;
   float xd, yd;
   int numuse = 0;
+
+  clock_t tstart = clock();
+
   for (int iy = 0; iy < npixy; ++iy) 
   for (int ix = 0; ix < npixx; ++ix) { 
 

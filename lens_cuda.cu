@@ -104,8 +104,8 @@ int main(int argc, char* argv[])
   float* xlens;
   float* ylens;
   float* eps;
-  const int nlenses = set_example_3(&xlens, &ylens, &eps);
-  //const int nlenses = set_example_n(100, &xlens, &ylens, &eps);
+  //const int nlenses = set_example_3(&xlens, &ylens, &eps);
+  const int nlenses = set_example_n(100, &xlens, &ylens, &eps);
   std::cout << "# Simulating " << nlenses << " lens system" << std::endl;
 
   // Pixel size in physical units of the lens image. You can try finer
@@ -144,12 +144,25 @@ int main(int argc, char* argv[])
   int threadsPerBlock = 512;
   int blocksPerGrid = (total + threadsPerBlock - 1) / threadsPerBlock;
 
-  clock_t tstart = clock();
+  //clock_t tstart = clock();
+  float time;
+  cudaEvent_t start, stop;
+  
+  cudaEventCreate(&start);
+  cudaEventCreate(&stop);
+  cudaEventRecord(start, 0);
 
   mx_shoot<<<blocksPerGrid, threadsPerBlock>>>(d_xlens, d_ylens, d_eps, d_lensim, XL1, YL1, nlenses, lens_scale, npixx, npixy);
 
-  clock_t tend = clock();
-  double tms = diffclock(tend, tstart);
+  cudaEventRecord(stop, 0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&time, start, stop);
+
+  cudaEventDestroy(start);
+  cudaEventDestroy(stop);
+
+  //clock_t tend = clock();
+  //double tms = diffclock(tend, tstart);
   std::cout << "# Time elapsed: " << tms << " ms " << std::endl;
 
   cudaMemcpy(lensim.buffer, d_lensim, size_img, cudaMemcpyDeviceToHost);
