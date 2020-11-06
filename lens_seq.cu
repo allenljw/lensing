@@ -64,9 +64,7 @@ int main(int argc, char* argv[])
 
   // Put the lens image in this array
   Array<float, 2> lensim(npixy, npixx);
-
-  clock_t tstart = clock();
-
+  
   // Draw the lensing image map here. For each pixel, shoot a ray back
   // to the source plane, then test whether or or not it hits the
   // source star

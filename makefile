@@ -29,8 +29,8 @@ clean :
 	rm -f *.o
 
 # Demo program. Add more programs by making entries similar to this
-lens_cuda : lens_seq.cu $(OBJS)
-	${NVCC} $(CFLAGS) -o lens_seq lens_seq.cu $(MODS)
+lens_cuda : lens_cuda.cu $(OBJS)
+	${NVCC} $(CFLAGS) -o lens_cuda lens_cuda.cu $(MODS)
 
 # Modules compiled and linked separately
 fitsfile.o : fitsfile.cpp fitsfile.h
