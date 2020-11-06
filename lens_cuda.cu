@@ -111,7 +111,7 @@ int main(int argc, char* argv[])
   // Pixel size in physical units of the lens image. You can try finer
   // lens scale which will result in larger images (and take more
   // time).
-  const float lens_scale = 0.0002;
+  const float lens_scale = 0.001;
 
   // Size of the lens image
   const int npixx = static_cast<int>(floor((XL2 - XL1) / lens_scale)) + 1;
@@ -144,23 +144,23 @@ int main(int argc, char* argv[])
   int threadsPerBlock = 512;
   int blocksPerGrid = (total + threadsPerBlock - 1) / threadsPerBlock;
 
-  clock_t tstart = clock();
-  // float time;
-  // cudaEvent_t start, stop;
-  // cudaEventCreate(&start); cudaEventCreate(&stop);
-  // cudaEventRecord(start);
+  //clock_t tstart = clock();
+  float time;
+  cudaEvent_t start, stop;
+  cudaEventCreate(&start); cudaEventCreate(&stop);
+  cudaEventRecord(start);
 
   mx_shoot<<<blocksPerGrid, threadsPerBlock>>>(d_xlens, d_ylens, d_eps, d_lensim, XL1, YL1, nlenses, lens_scale, npixx, npixy);
 
-  // cudaEventRecord(stop,0);
-  // cudaEventSynchronize(stop);
-  // cudaEventElapsedTime(&time, start, stop);
+  cudaEventRecord(stop,0);
+  cudaEventSynchronize(stop);
+  cudaEventElapsedTime(&time, start, stop);
 
   cudaMemcpy(lensim.buffer, d_lensim, size_img, cudaMemcpyDeviceToHost);
 
-  clock_t tend = clock();
-  double tms = diffclock(tend, tstart);
-  std::cout << "# Time elapsed: " << tms << " ms " << std::endl;
+  //clock_t tend = clock();
+  //double tms = diffclock(tend, tstart);
+  std::cout << "# Time elapsed: " << time << " ms " << std::endl;
 
   // Write the lens image to a FITS formatted file. You can view this
   // image file using ds9
